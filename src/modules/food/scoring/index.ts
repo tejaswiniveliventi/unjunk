@@ -1,0 +1,1 @@
+export { scoreProduct } from './rubric'

@@ -1,0 +1,1 @@
+export { getCachedResult, setCachedResult } from './searchCache'
