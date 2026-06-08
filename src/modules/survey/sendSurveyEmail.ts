@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
+//const resend = new Resend(process.env.RESEND_API_KEY!)
 
 export async function sendSurveyEmail(
   email: string,
@@ -9,6 +9,8 @@ export async function sendSurveyEmail(
   tallyFormUrl: string
 ): Promise<boolean> {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY!)
+
     const surveyUrl = `${tallyFormUrl}?search_id=${searchId}`
 
     await resend.emails.send({
