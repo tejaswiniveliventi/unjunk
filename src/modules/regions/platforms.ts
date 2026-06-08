@@ -5,7 +5,7 @@ const PLATFORM_LABELS: Record<PlatformKey, string> = {
   zepto:          'Zepto',
   bigbasket:      'BigBasket',
   swiggy_instamart: 'Swiggy Instamart',
-  amazon_in:      'Amazon India',
+  amazon_in:      'Amazon',
   amazon_us:      'Amazon',
   whole_foods:    'Whole Foods',
   instacart:      'Instacart'

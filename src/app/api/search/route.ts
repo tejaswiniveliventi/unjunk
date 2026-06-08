@@ -15,6 +15,7 @@ import {
 } from '@/modules/db'
 import { supabaseAdmin } from '@/lib/supabase/server'
 
+
 // ─── Request validation ───────────────────────────────────────
 
 const SearchRequestSchema = z.object({
