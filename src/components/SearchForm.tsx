@@ -2,14 +2,28 @@
 
 import { useState } from 'react'
 
-const CITIES = [
-  { slug: 'bangalore', name: 'Bangalore' },
-  { slug: 'mumbai',    name: 'Mumbai' },
-  { slug: 'delhi',     name: 'Delhi' },
-  { slug: 'hyderabad', name: 'Hyderabad' },
-  { slug: 'pune',      name: 'Pune' },
-  { slug: 'chennai',   name: 'Chennai' },
-]
+const CITIES = {
+  IN: [
+    { slug: 'bangalore',  name: 'Bangalore' },
+    { slug: 'mumbai',     name: 'Mumbai' },
+    { slug: 'delhi',      name: 'Delhi' },
+    { slug: 'hyderabad',  name: 'Hyderabad' },
+    { slug: 'pune',       name: 'Pune' },
+    { slug: 'chennai',    name: 'Chennai' },
+  ],
+  US: [
+    { slug: 'san-francisco', name: 'San Francisco, CA' },
+    { slug: 'san-jose',      name: 'San Jose, CA' },
+    { slug: 'oakland',       name: 'Oakland, CA' },
+    { slug: 'new-york-city', name: 'New York City, NY' },
+    { slug: 'newark',        name: 'Newark, NJ' },
+    { slug: 'jersey-city',   name: 'Jersey City, NJ' },
+    { slug: 'atlanta',       name: 'Atlanta, GA' },
+    { slug: 'houston',       name: 'Houston, TX' },
+    { slug: 'dallas',        name: 'Dallas, TX' },
+    { slug: 'austin',        name: 'Austin, TX' },
+  ]
+}
 
 type Props = {
   onSearch: (food: string, city: string) => void
@@ -91,27 +105,34 @@ export default function SearchForm({ onSearch }: Props) {
         />
 
         <select
-          value={city}
-          onChange={e => setCity(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '14px 16px',
-            fontSize: 15,
-            border: touched && !city
-              ? '1.5px solid #E53935'
-              : '1.5px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            background: 'var(--bg-card)',
-            outline: 'none',
-            color: city ? 'var(--text-primary)' : 'var(--text-secondary)',
-            cursor: 'pointer'
-          }}
-        >
-          <option value="" disabled>Select your city</option>
-          {CITIES.map(c => (
-            <option key={c.slug} value={c.slug}>{c.name}</option>
-          ))}
-        </select>
+            value={city}
+            onChange={e => setCity(e.target.value)}
+            style={{
+                width: '100%',
+                padding: '14px 16px',
+                fontSize: 15,
+                border: touched && !city
+                ? '1.5px solid #E53935'
+                : '1.5px solid var(--border)',
+                borderRadius: 'var(--radius)',
+                background: 'var(--bg-card)',
+                outline: 'none',
+                color: city ? 'var(--text-primary)' : 'var(--text-secondary)',
+                cursor: 'pointer'
+            }}
+            >
+            <option value="" disabled>Select your city</option>
+            <optgroup label="🇮🇳 India">
+                {CITIES.IN.map(c => (
+                <option key={c.slug} value={c.slug}>{c.name}</option>
+                ))}
+            </optgroup>
+            <optgroup label="🇺🇸 United States">
+                {CITIES.US.map(c => (
+                <option key={c.slug} value={c.slug}>{c.name}</option>
+                ))}
+            </optgroup>
+            </select>
 
         <button
           onClick={handleSubmit}

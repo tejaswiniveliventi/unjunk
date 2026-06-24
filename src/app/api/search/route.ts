@@ -7,6 +7,7 @@ import { runSearchPipeline } from '@/modules/ai'
 import { getCityBySlug } from '@/modules/regions/cities'
 import { buildBuyLinks } from '@/modules/regions/platforms'
 import { scoreProduct } from '@/modules/food/scoring'
+import { checkRateLimits } from '@/modules/rateLimit'
 import {
   createSearch,
   upsertProduct,
@@ -50,8 +51,24 @@ export async function POST(req: NextRequest) {
   }
 
   const regionCode = city.regionCode
+  //3. Check rate limits
+  // Rate limiting
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        ?? req.headers.get('x-real-ip')
+        ?? '127.0.0.1'
 
-  // 3. Fetch rubric config for this region
+  const rateLimit = await checkRateLimits(ip, sessionId)
+
+  if (!rateLimit.allowed) {
+    return respond(
+      429,
+      null,
+      `Too many requests. Try again in ${Math.ceil(rateLimit.resetInSeconds / 60)} minutes.`,
+      'RATE_LIMITED'
+    )
+  }
+
+  // 4. Fetch rubric config for this region
   const { data: regionRow } = await supabaseAdmin
     .from('regions')
     .select('rubric_config')
@@ -60,7 +77,7 @@ export async function POST(req: NextRequest) {
 
   const rubricConfig = regionRow?.rubric_config ?? {}
 
-  // 4. Check Redis cache — return immediately if hit
+  // 5. Check Redis cache — return immediately if hit
   const cached = await getCachedResult(regionCode, citySlug, inputText)
   if (cached) {
     await createSearch({
@@ -74,10 +91,10 @@ export async function POST(req: NextRequest) {
     return respond(200, { ...cached, fromCache: true })
   }
 
-  // 5. Fetch from Open Food Facts
+  // 6. Fetch from Open Food Facts
   const offProduct = await searchProductByName(inputText, regionCode)
 
-  // 6. Create search record BEFORE pipeline so we have searchId for logs
+  // 7. Create search record BEFORE pipeline so we have searchId for logs
   const search = await createSearch({
     sessionId,
     email,
@@ -89,7 +106,7 @@ export async function POST(req: NextRequest) {
 
   const searchId = search?.id ?? null
 
-  // 7. Run AI pipeline — pass searchId so logs are linked
+  // 8. Run AI pipeline — pass searchId so logs are linked
   let pipelineResult
   try {
     pipelineResult = await runSearchPipeline(
@@ -105,7 +122,7 @@ export async function POST(req: NextRequest) {
 
   const { normalizedFood, candidates } = pipelineResult
 
-  // 8. Update search record with normalized food name
+  // 9. Update search record with normalized food name
   if (search) {
     await supabaseAdmin
       .from('searches')
@@ -121,7 +138,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // 9. Build and save alternatives
+  // 10. Build and save alternatives
   const alternatives = await Promise.all(
     candidates.slice(0, 3).map(async ({ candidate, explanation }, index) => {
       const productId = await upsertProduct(candidate, regionCode, rubricConfig)
@@ -177,19 +194,19 @@ export async function POST(req: NextRequest) {
     })
   )
 
-  // 10. Schedule survey email if email provided
+  // 11. Schedule survey email if email provided
   if (email && search) {
     await scheduleEmail(search.id, email)
   }
 
-  // 11. Build response
+  // 12. Build response
   const result = {
     normalizedFood: normalizedFood.canonicalName,
     alternatives,
     fromCache:      false
   }
 
-  // 12. Cache for next time
+  // 13. Cache for next time
   await setCachedResult(regionCode, citySlug, inputText, result)
 
   return respond(200, result)
